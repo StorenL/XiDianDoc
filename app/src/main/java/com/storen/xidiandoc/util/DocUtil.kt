@@ -2,6 +2,7 @@ package com.storen.xidiandoc.util
 
 import android.content.res.AssetManager
 import android.text.TextUtils
+import android.util.Log
 import com.storen.xidiandoc.bean.ChoiceQuestion
 import org.apache.poi.hwpf.HWPFDocument
 import org.apache.poi.hwpf.extractor.WordExtractor
@@ -59,7 +60,7 @@ object DocUtil {
             questionList.add(
                 ChoiceQuestion(
                     it.first(),
-                    it.subList(1, it.size - 1),
+                    it.subList(1, it.size - 1).toList(),
                     ChoiceQuestion.findAnswer2(it.last())
                 )
             )
@@ -69,7 +70,7 @@ object DocUtil {
             questionList.add(
                 ChoiceQuestion(
                     it.first(),
-                    it.subList(1, it.size),
+                    it.subList(1, it.size).toList(),
                     listOf()
                 )
             )

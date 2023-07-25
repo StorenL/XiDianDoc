@@ -29,7 +29,7 @@ data class ChoiceQuestion(
                 replace('(', '（')
                 replace(')', ')')
             }
-            return if (title.contains("$num. ")) title else "$num. $title"
+            return if (title.contains("$num.")) title else "$num.$title"
         }
 
         fun fixAnswerList(list: List<String>) = list.mapIndexed { index, s ->
