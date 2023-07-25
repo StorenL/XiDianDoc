@@ -49,8 +49,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
@@ -59,10 +63,9 @@ import com.storen.xidiandoc.bean.ChoiceQuestion
 import com.storen.xidiandoc.ui.theme.XiDianDocTheme
 import com.storen.xidiandoc.util.DocUtil
 
-
 class MainActivity : ComponentActivity() {
 
-    private val questionList by lazy { DocUtil.parseDoc1(DocUtil.readDocFile1(assets)) }
+    private val questionList by lazy { DocUtil.parseDoc1(DocUtil.readTxtFile(assets)) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,6 +91,7 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(questionList: List<ChoiceQuestion>) {
     ModalNavigationDrawer(
         modifier = Modifier.fillMaxSize(),
+        gesturesEnabled = false,
         drawerContent = {
             ModalNavigationDrawerContent()
         }) {
@@ -154,7 +158,11 @@ fun MainScreen(questionList: List<ChoiceQuestion>) {
 //                                IconButton(onClick = { /*TODO*/ }) {
 //                                    Icon(imageVector = Icons.Outlined.KeyboardArrowDown, contentDescription = "下一个")
 //                                }
-                                Spacer(modifier = Modifier.width(10.dp).fillMaxHeight())
+                                Spacer(
+                                    modifier = Modifier
+                                        .width(10.dp)
+                                        .fillMaxHeight()
+                                )
                                 Text(text = "${questions.size}/${questionList.size}")
                             }
                         }
@@ -172,7 +180,8 @@ fun MainScreen(questionList: List<ChoiceQuestion>) {
                 Box(modifier = Modifier.padding(it)) {
                     DocViewer(
                         questions,
-                        listState = rememberLazyListState
+                        searchText,
+                        listState = rememberLazyListState,
                     )
                 }
             }
@@ -203,19 +212,29 @@ fun ModalNavigationDrawerContent(onDrawerClicked: () -> Unit = {}) {
 }
 
 @Composable
-fun DocViewer(questions: List<ChoiceQuestion>, modifier: Modifier = Modifier, listState: LazyListState = rememberLazyListState()) {
+fun DocViewer(
+    questions: List<ChoiceQuestion>,
+    searchText: String,
+    modifier: Modifier = Modifier,
+    listState: LazyListState = rememberLazyListState()
+) {
 //    val statusBarHeightDp = LocalDensity.current.run {
 //        WindowInsets.statusBars.getTop(this).toDp()
 //    }
     LazyColumn(modifier = modifier, state = listState) {
         itemsIndexed(questions) { index, item ->
-            QuestionItem(question = item)
+            QuestionItem(question = item, searchText = searchText)
+        }
+        item {
+            Box(modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)) {}
         }
     }
 }
 
 @Composable
-fun QuestionItem(question: ChoiceQuestion) {
+fun QuestionItem(question: ChoiceQuestion, searchText: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -228,11 +247,13 @@ fun QuestionItem(question: ChoiceQuestion) {
                 .wrapContentHeight()
                 .padding(horizontal = 5.dp, vertical = 2.5.dp)
         ) {
-            Text(modifier = Modifier.padding(5.dp), text = question.question, fontWeight = FontWeight.W900)
+            Text(
+                modifier = Modifier.padding(5.dp), text = markSearchText(question.question, searchText = searchText), fontWeight = FontWeight.W900
+            )
             question.itemList.forEachIndexed { index, item ->
                 Text(
                     modifier = Modifier.padding(horizontal = 5.dp),
-                    text = item,
+                    text = markSearchText(item, searchText = searchText),
                     color = if (index in question.answerIndexes) Color.Blue else Color.Red,
                     fontWeight = FontWeight.W600
                 )
@@ -251,6 +272,24 @@ fun QuestionItem(question: ChoiceQuestion) {
 @Composable
 fun GreetingPreview() {
     XiDianDocTheme {
-        QuestionItem(ChoiceQuestion(question = "Aha Aha Aha Aha Aha Aha Aha Aha Aha Aha"))
+        QuestionItem(ChoiceQuestion(question = "Aha Aha Aha Aha Aha Aha Aha Aha Aha Aha"), "Aha")
+    }
+}
+
+private fun markSearchText(str: String, searchText: String): AnnotatedString {
+    return if (searchText.isEmpty() || !str.contains(searchText)) {
+        AnnotatedString(str)
+    } else {
+        buildAnnotatedString {
+            val strings = str.split(searchText)
+            strings.forEachIndexed { index, s ->
+                append(s)
+                if (index != strings.size - 1 || str.endsWith(searchText)) {
+                    withStyle(SpanStyle(color = Color.Green)) {
+                        append(searchText)
+                    }
+                }
+            }
+        }
     }
 }

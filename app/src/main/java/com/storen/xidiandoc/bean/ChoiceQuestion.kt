@@ -15,6 +15,15 @@ data class ChoiceQuestion(
             return list
         }
 
+        fun findAnswer2(str: String): List<Int> {
+            val list = mutableListOf<Int>()
+            if (str.contains("A")) list.add(0)
+            if (str.contains("B")) list.add(1)
+            if (str.contains("C")) list.add(2)
+            if (str.contains("D")) list.add(3)
+            return list
+        }
+
         fun fixQuestionTitle(num: Int, str: String): String {
             val title = str.trim().run {
                 replace('(', '（')
